@@ -21,7 +21,7 @@ import (
 func main() {
 	ctx := context.Background()
 
-	kubeconfig := ""
+	kubeconfig := os.Getenv("KUBECONFIG")
 	verboseLog := false
 
 	flag.StringVar(&kubeconfig, "kubeconfig", kubeconfig, "kubeconfig file to use")
@@ -101,6 +101,8 @@ func nukeCRD(ctx context.Context, log logrus.FieldLogger, client ctrlruntimeclie
 	}
 
 	// check if the CRD is gone
+	time.Sleep(3 * time.Second)
+
 	crd = &apiextensionsv1.CustomResourceDefinition{}
 	err := client.Get(ctx, types.NamespacedName{Name: crdName}, crd)
 	if err != nil && !kerrors.IsNotFound(err) {
