@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"errors"
 	"flag"
 	"fmt"
 	"os"
@@ -14,6 +15,7 @@ import (
 	kerrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/types"
+	"k8s.io/apimachinery/pkg/util/wait"
 	"k8s.io/client-go/tools/clientcmd"
 	ctrlruntimeclient "sigs.k8s.io/controller-runtime/pkg/client"
 )
@@ -101,15 +103,22 @@ func nukeCRD(ctx context.Context, log logrus.FieldLogger, client ctrlruntimeclie
 	}
 
 	// check if the CRD is gone
-	time.Sleep(3 * time.Second)
+	err := wait.PollImmediate(100*time.Millisecond, 5*time.Second, func() (bool, error) {
+		crd := &apiextensionsv1.CustomResourceDefinition{}
+		err := client.Get(ctx, types.NamespacedName{Name: crdName}, crd)
+		if err == nil {
+			return false, nil // CRD still exists
+		}
+		if kerrors.IsNotFound(err) {
+			return true, nil // done!
+		}
 
-	crd = &apiextensionsv1.CustomResourceDefinition{}
-	err := client.Get(ctx, types.NamespacedName{Name: crdName}, crd)
-	if err != nil && !kerrors.IsNotFound(err) {
-		return fmt.Errorf("failed to check final CRD existence: %w", err)
-	}
-	if err == nil {
+		return false, err
+	})
+	if errors.Is(err, wait.ErrWaitTimeout) {
 		log.Warn("CRD still exists, some resources might be blocked by owner references to them.")
+	} else if err != nil {
+		return fmt.Errorf("failed to check final CRD existence: %w", err)
 	}
 
 	return nil
