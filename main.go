@@ -127,7 +127,7 @@ func nukeCRD(ctx context.Context, log logrus.FieldLogger, client ctrlruntimeclie
 func removeResources(ctx context.Context, log logrus.FieldLogger, client ctrlruntimeclient.Client, crd *apiextensionsv1.CustomResourceDefinition) error {
 	if crd.Spec.Scope == apiextensionsv1.NamespaceScoped {
 		nsList := &corev1.NamespaceList{}
-		if err := client.List(ctx, nsList); err != nil {
+		if err := client.List(ctx, nsList); err != nil && !kerrors.IsNotFound(err) {
 			return fmt.Errorf("failed to list namespaces: %w", err)
 		}
 
@@ -140,6 +140,8 @@ func removeResources(ctx context.Context, log logrus.FieldLogger, client ctrlrun
 				return err
 			}
 		}
+
+		return nil
 	}
 
 	return removeResourcesWithOpts(ctx, log, client, crd)
@@ -155,7 +157,7 @@ func removeResourcesWithOpts(ctx context.Context, log logrus.FieldLogger, client
 	objectList.SetAPIVersion(apiVersion)
 	objectList.SetKind(crd.Spec.Names.Kind)
 
-	if err := client.List(ctx, objectList, opts...); err != nil {
+	if err := client.List(ctx, objectList, opts...); err != nil && !kerrors.IsNotFound(err) {
 		return fmt.Errorf("failed to list objects: %w", err)
 	}
 
