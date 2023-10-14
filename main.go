@@ -5,10 +5,12 @@ import (
 	"flag"
 	"fmt"
 	"os"
+	"runtime"
 	"strings"
 	"time"
 
 	"github.com/sirupsen/logrus"
+	"github.com/spf13/pflag"
 	corev1 "k8s.io/api/core/v1"
 	apiextensionsv1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
 	kerrors "k8s.io/apimachinery/pkg/api/errors"
@@ -18,17 +20,46 @@ import (
 	_ "k8s.io/client-go/plugin/pkg/client/auth/oidc"
 	"k8s.io/client-go/tools/clientcmd"
 	ctrlruntimeclient "sigs.k8s.io/controller-runtime/pkg/client"
+	"sigs.k8s.io/controller-runtime/pkg/manager/signals"
 )
 
+// These variables get set by ldflags during compilation.
+var (
+	BuildTag    string
+	BuildCommit string
+	BuildDate   string // RFC3339 format ("2006-01-02T15:04:05Z07:00")
+)
+
+func printVersion() {
+	fmt.Printf(
+		"Kube Nukem %s (%s), built with %s on %s\n",
+		BuildTag,
+		BuildCommit[:10],
+		runtime.Version(),
+		BuildDate,
+	)
+}
+
 func main() {
-	ctx := context.Background()
+	ctx := signals.SetupSignalHandler()
 
-	kubeconfig := os.Getenv("KUBECONFIG")
+	kubeconfig := ""
 	verboseLog := false
+	version := false
 
-	flag.StringVar(&kubeconfig, "kubeconfig", kubeconfig, "kubeconfig file to use")
-	flag.BoolVar(&verboseLog, "verbose", verboseLog, "enable more verbose logging")
-	flag.Parse()
+	pflag.StringVar(&kubeconfig, "kubeconfig", "", "kubeconfig file to use (uses $KUBECONFIG by default)")
+	pflag.BoolVarP(&verboseLog, "verbose", "v", verboseLog, "enable more verbose logging")
+	pflag.BoolVarP(&version, "version", "V", version, "show version info and exit immediately")
+	pflag.Parse()
+
+	if version {
+		printVersion()
+		return
+	}
+
+	if kubeconfig == "" {
+		kubeconfig = os.Getenv("KUBECONFIG")
+	}
 
 	// setup logging
 	var log = logrus.New()

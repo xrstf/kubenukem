@@ -11,7 +11,7 @@ $ kubenukem mytestcrd.omnicorp.com
 
 ## Installation
 
-You need Go 1.17 installed on your machine.
+You need Go 1.20 installed on your machine.
 
 ```bash
 go install go.xrstf.de/kubenukem
@@ -20,11 +20,10 @@ go install go.xrstf.de/kubenukem
 ## Usage
 
 ```
-Usage of ./kubenukem:
-  -kubeconfig string
-        kubeconfig file to use
-  -verbose
-        enable more verbose logging
+Usage of _build/kubenukem:
+      --kubeconfig string   kubeconfig file to use (uses $KUBECONFIG by default)
+  -v, --verbose             enable more verbose logging
+  -V, --version             show version info and exit immediately
 ```
 
 The kubeconfig can also be given using the `KUBECONFIG` environment variable.
