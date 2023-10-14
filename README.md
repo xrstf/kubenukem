@@ -5,7 +5,7 @@ a cluster. For this the CRD will be deleted and then any remaining finalizers wi
 from stuck resources. Assuming no owner references block the deletion, this gets rid of all
 resources.
 
-```
+```bash
 $ kubenukem mytestcrd.omnicorp.com
 ```
 
@@ -13,8 +13,8 @@ $ kubenukem mytestcrd.omnicorp.com
 
 You need Go 1.17 installed on your machine.
 
-```
-go get go.xrstf.de/kubenukem
+```bash
+go install go.xrstf.de/kubenukem
 ```
 
 ## Usage

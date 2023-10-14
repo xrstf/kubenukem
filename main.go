@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"errors"
 	"flag"
 	"fmt"
 	"os"
@@ -16,6 +15,7 @@ import (
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/wait"
+	_ "k8s.io/client-go/plugin/pkg/client/auth/oidc"
 	"k8s.io/client-go/tools/clientcmd"
 	ctrlruntimeclient "sigs.k8s.io/controller-runtime/pkg/client"
 )
@@ -103,7 +103,7 @@ func nukeCRD(ctx context.Context, log logrus.FieldLogger, client ctrlruntimeclie
 	}
 
 	// check if the CRD is gone
-	err := wait.PollImmediate(100*time.Millisecond, 5*time.Second, func() (bool, error) {
+	err := wait.PollUntilContextTimeout(ctx, 100*time.Millisecond, 5*time.Second, true, func(ctx context.Context) (bool, error) {
 		crd := &apiextensionsv1.CustomResourceDefinition{}
 		err := client.Get(ctx, types.NamespacedName{Name: crdName}, crd)
 		if err == nil {
@@ -115,7 +115,7 @@ func nukeCRD(ctx context.Context, log logrus.FieldLogger, client ctrlruntimeclie
 
 		return false, err
 	})
-	if errors.Is(err, wait.ErrWaitTimeout) {
+	if wait.Interrupted(err) {
 		log.Warn("CRD still exists, some resources might be blocked by owner references to them.")
 	} else if err != nil {
 		return fmt.Errorf("failed to check final CRD existence: %w", err)
