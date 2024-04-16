@@ -5,7 +5,6 @@ package main
 
 import (
 	"context"
-	"flag"
 	"fmt"
 	"os"
 	"runtime"
@@ -75,7 +74,7 @@ func main() {
 		log.SetLevel(logrus.DebugLevel)
 	}
 
-	if flag.NArg() == 0 {
+	if pflag.NArg() == 0 {
 		log.Fatal("No CRD names provided.")
 	}
 
@@ -95,7 +94,7 @@ func main() {
 
 	success := false
 
-	for _, crdName := range flag.Args() {
+	for _, crdName := range pflag.Args() {
 		crdName := strings.ToLower(crdName)
 		crdLog := log.WithField("crd", crdName)
 
