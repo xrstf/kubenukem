@@ -13,6 +13,7 @@ import (
 
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/pflag"
+
 	corev1 "k8s.io/api/core/v1"
 	apiextensionsv1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
 	kerrors "k8s.io/apimachinery/pkg/api/errors"
@@ -33,13 +34,19 @@ var (
 )
 
 func printVersion() {
-	fmt.Printf(
-		"Kube Nukem %s (%s), built with %s on %s\n",
-		BuildTag,
-		BuildCommit[:10],
-		runtime.Version(),
-		BuildDate,
-	)
+	// handle empty values in case `go install` was used
+	if BuildCommit == "" {
+		fmt.Printf("Kube Nukem dev, built with %s\n",
+			runtime.Version(),
+		)
+	} else {
+		fmt.Printf("Kube Nukem %s (%s), built with %s on %s\n",
+			BuildTag,
+			BuildCommit[:10],
+			runtime.Version(),
+			BuildDate,
+		)
+	}
 }
 
 func main() {
