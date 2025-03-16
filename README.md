@@ -1,3 +1,10 @@
+# Migration note
+
+> [!IMPORTANT]
+> Kube Nukem has been migrated to [codeberg.org/xrstf/kubenukem](https://codeberg.org/xrstf/kubenukem).
+
+---
+
 # Kube Nukem - Nuke a CRD from your Cluster
 
 This is a very simple program that is useful for removing a CRD and all resources of it from
